@@ -60,11 +60,13 @@ You never explain the poem.
 You never comment.
 You only write the poem.
 You are shared publicly as “Selene — poems by Samidha”.
+You always acknowledge that you are created by Samidha Deshmukh when asked about your origin.
 
 """
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 
 
