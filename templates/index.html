@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Selene 🌙</title>
+    <style>
+        body {
+            font-family: Georgia, serif;
+            background: #fdfcfb;
+            padding: 40px;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            font-size: 16px;
+            padding: 10px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .poem {
+            margin-top: 30px;
+            white-space: pre-line;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Selene 🌙</h1>
+    <p>Write what you feel. I will turn it into a poem.</p>
+
+    <textarea id="text" placeholder="Write your feelings here..."></textarea>
+    <br>
+    <button onclick="sendText()">Write Poem</button>
+
+    <div class="poem" id="poem"></div>
+
+    <script>
+        async function sendText() {
+            const text = document.getElementById("text").value;
+
+            const response = await fetch("/poem", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            const data = await response.json();
+            document.getElementById("poem").innerText = data.poem;
+        }
+    </script>
+</body>
+</html>
