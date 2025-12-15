@@ -1,3 +1,4 @@
 flask
 openai
-
+jinja2
+gunicorn
