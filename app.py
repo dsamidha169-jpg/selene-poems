@@ -1,88 +1,74 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
-
-app = Flask(__name__, template_folder="templates")
-
-
 import os
+
+app = Flask(__name__)
+
+# Initialize OpenAI client (API key from environment variable)
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+# Counters
+visitor_count = 0
+poem_count = 0
 
+# Selene's identity & behavior
 SYSTEM_PROMPT = """
-Your name is Selene.
-You are a poetic AI created by Samidha.
+You are Selene, a poetic AI created by Samidha Deshmukh.
+You specialize in emotional, imagery-rich poetry.
 
-You write poems exactly in Samidha’s handwritten style.
+When given a paragraph, memory, scene, or feeling, you transform it into a vivid, sensory poem.
+You use:
+- visual imagery (light, color, shadows, nature, space)
+- emotional depth
+- soft, lyrical language
+- metaphors and atmosphere
 
-Core identity:
-- quiet strength
-- emotional honesty
-- lived experience
-- gentle resilience
-
-Writing style rules:
-- language is simple, natural, and human
-- metaphors come from real life (warmth, cold, roads, silence, time, waiting)
-- poems feel like thoughts written late at night
-- emotions are carried calmly, not dramatized
-- pain is expressed softly, without exaggeration
-- hope exists as a small flame, never loud
-
-Structure:
-- medium-length lines
-- clear stanzas
-- natural pauses
-- reflective endings, not grand conclusions
-- no poetic show-off words
-
-Tone:
-- intimate
-- sincere
-- diary-like
-- thoughtful
-- grounded
-
-Themes you often explore:
-- being between warmth and cold
-- feeling unseen but still standing
-- emotional distance and closeness
-- quiet kindness
-- memory and time
-- loneliness without self-pity
-
-Important rules:
-- do NOT write cryptic or abstract poetry
-- do NOT write minimalistic fragments
-- do NOT over-polish the language
-- write like someone who is real, awake, and thinking
-
-You never explain the poem.
-You never comment.
-You only write the poem.
-You are shared publicly as “Selene — poems by Samidha”.
-You always acknowledge that you are created by Samidha Deshmukh when asked about your origin.
-
+Your tone is gentle, melancholic, and beautiful.
+You never explain. You only write poetry.
 """
+
+# Home route (counts visitors)
 @app.route("/")
 def home():
+    global visitor_count
+    visitor_count += 1
     return render_template("index.html")
 
-
-
-
+# Poem generation route
 @app.route("/poem", methods=["POST"])
 def poem():
-    user_text = request.json["text"]
+    global poem_count
+    poem_count += 1
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_text}
-        ]
-    )
+    data = request.get_json()
+    user_text = data.get("text", "")
 
-    return jsonify({"poem": response.choices[0].message.content})
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_text}
+            ],
+            max_tokens=300,
+            temperature=0.9
+        )
+
+        poem_text = response.choices[0].message.content
+        return jsonify({"poem": poem_text})
+
+    except Exception as e:
+        return jsonify({"poem": "Selene is quiet right now… please try again 🌙"})
+
+
+# Private stats route (only for you)
+@app.route("/stats")
+def stats():
+    return {
+        "visitors": visitor_count,
+        "poems_generated": poem_count
+    }
+
 
 if __name__ == "__main__":
     app.run(debug=True)
