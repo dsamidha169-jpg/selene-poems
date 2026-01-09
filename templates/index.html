@@ -99,6 +99,21 @@
             transform: translateY(-1px);
         }
 
+        .loader {
+            display: none;
+            margin-top: 25px;
+            text-align: center;
+            font-style: italic;
+            opacity: 0.8;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
         .poem {
             margin-top: 25px;
             white-space: pre-line;
@@ -150,6 +165,8 @@
 
     <button onclick="sendText()">Let Selene write</button>
 
+    <div class="loader" id="loader">Selene is listening… 🌙</div>
+
     <div class="poem" id="poem"></div>
 
     <button id="saveBtn" onclick="saveBestPoem()">Save as Best 🌙</button>
@@ -162,36 +179,64 @@ async function sendText() {
     const text = document.getElementById("text").value;
     const mode = document.getElementById("mode").value;
 
-    const response = await fetch("/poem", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ text: text, mode: mode })
-    });
+    if (text.trim() === "") {
+        alert("Write something first 🌙");
+        return;
+    }
 
-    const data = await response.json();
-    document.getElementById("poem").innerText = data.poem;
-    document.getElementById("saveBtn").style.display = "block";
+    // Show loader
+    document.getElementById("loader").style.display = "block";
+    document.getElementById("poem").innerText = "";
+    document.getElementById("saveBtn").style.display = "none";
+
+    try {
+        const response = await fetch("/poem", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text: text,
+                mode: mode
+            })
+        });
+
+        const data = await response.json();
+
+        // Hide loader and show poem
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("poem").innerText = data.poem;
+        document.getElementById("saveBtn").style.display = "block";
+
+    } catch (error) {
+        document.getElementById("loader").style.display = "none";
+        alert("Selene is silent right now… try again 🌙");
+    }
 }
 
 async function saveBestPoem() {
     const poemText = document.getElementById("poem").innerText;
 
-    const response = await fetch("/save_best", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ poem: poemText })
-    });
+    if (poemText.trim() === "") return;
 
-    const data = await response.json();
+    try {
+        const response = await fetch("/save_best", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ poem: poemText })
+        });
 
-    if (data.status === "saved") {
-        alert("Saved as best 🌙");
-    } else {
-        alert("Could not save poem.");
+        const data = await response.json();
+
+        if (data.status === "saved") {
+            alert("Saved as best 🌙");
+        } else {
+            alert("Could not save poem.");
+        }
+    } catch (error) {
+        alert("Error saving poem.");
     }
 }
 </script>
