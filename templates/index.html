@@ -23,17 +23,18 @@
             width: 90%;
             max-width: 600px;
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            box-shadow: 0 0 40px rgba(0,0,0,0.4);
+            position: relative;
         }
 
         h1 {
             font-family: 'Playfair Display', serif;
             text-align: center;
             margin-bottom: 5px;
-            font-size: 2.2rem;
+            font-size: 2.3rem;
         }
 
         .subtitle {
@@ -49,32 +50,21 @@
             margin-bottom: 6px;
         }
 
-        select {
+        select, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border-radius: 12px;
             border: none;
             margin-bottom: 12px;
             background: rgba(255,255,255,0.1);
             color: #fff;
             outline: none;
-        }
-
-        option {
-            color: #000;
+            font-size: 1rem;
         }
 
         textarea {
-            width: 100%;
             height: 120px;
-            background: rgba(255,255,255,0.1);
-            border: none;
-            border-radius: 12px;
-            padding: 15px;
-            color: #fff;
-            font-size: 1rem;
             resize: none;
-            outline: none;
         }
 
         textarea::placeholder {
@@ -83,7 +73,7 @@
 
         button {
             width: 100%;
-            margin-top: 15px;
+            margin-top: 10px;
             padding: 12px;
             border: none;
             border-radius: 12px;
@@ -99,19 +89,45 @@
             transform: translateY(-1px);
         }
 
-        .loader {
+        /* 🌙 Loader overlay */
+        .loader-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15,12,41,0.92);
             display: none;
-            margin-top: 25px;
-            text-align: center;
-            font-style: italic;
-            opacity: 0.8;
-            animation: pulse 1.5s infinite;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border-radius: 20px;
+            z-index: 10;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.4; }
+        .moon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #cfcfe8);
+            box-shadow: 0 0 25px rgba(255,255,255,0.6);
+            animation: float 2.5s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        .loader-text {
+            font-style: italic;
+            opacity: 0.8;
+            animation: fade 1.8s infinite;
+        }
+
+        @keyframes fade {
+            0% { opacity: 0.3; }
             50% { opacity: 1; }
-            100% { opacity: 0.4; }
+            100% { opacity: 0.3; }
         }
 
         .poem {
@@ -119,7 +135,13 @@
             white-space: pre-line;
             font-style: italic;
             line-height: 1.7;
-            opacity: 0.95;
+            opacity: 0;
+            animation: fadeIn 1.2s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         #saveBtn {
@@ -165,7 +187,11 @@
 
     <button onclick="sendText()">Let Selene write</button>
 
-    <div class="loader" id="loader">Selene is listening… 🌙</div>
+    <!-- Loader -->
+    <div class="loader-overlay" id="loader">
+        <div class="moon"></div>
+        <div class="loader-text">Selene is listening… 🌙</div>
+    </div>
 
     <div class="poem" id="poem"></div>
 
@@ -173,6 +199,9 @@
 
     <div class="footer">some creations feel back 🌙</div>
 </div>
+
+<!-- 🌙 Soft ambient sound -->
+<audio id="loaderSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_5b8b3e2b62.mp3"></audio>
 
 <script>
 async function sendText() {
@@ -184,10 +213,11 @@ async function sendText() {
         return;
     }
 
-    // Show loader
-    document.getElementById("loader").style.display = "block";
+    // Show loader + play sound
+    document.getElementById("loader").style.display = "flex";
     document.getElementById("poem").innerText = "";
     document.getElementById("saveBtn").style.display = "none";
+    document.getElementById("loaderSound").play();
 
     try {
         const response = await fetch("/poem", {
@@ -195,47 +225,44 @@ async function sendText() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                text: text,
-                mode: mode
-            })
+            body: JSON.stringify({ text: text, mode: mode })
         });
 
         const data = await response.json();
 
-        // Hide loader and show poem
+        // Hide loader + stop sound
         document.getElementById("loader").style.display = "none";
+        document.getElementById("loaderSound").pause();
+        document.getElementById("loaderSound").currentTime = 0;
+
         document.getElementById("poem").innerText = data.poem;
         document.getElementById("saveBtn").style.display = "block";
 
     } catch (error) {
         document.getElementById("loader").style.display = "none";
+        document.getElementById("loaderSound").pause();
         alert("Selene is silent right now… try again 🌙");
     }
 }
 
 async function saveBestPoem() {
     const poemText = document.getElementById("poem").innerText;
-
     if (poemText.trim() === "") return;
 
     try {
         const response = await fetch("/save_best", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ poem: poemText })
         });
 
         const data = await response.json();
-
         if (data.status === "saved") {
             alert("Saved as best 🌙");
         } else {
             alert("Could not save poem.");
         }
-    } catch (error) {
+    } catch {
         alert("Error saving poem.");
     }
 }
