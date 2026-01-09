@@ -107,6 +107,21 @@
             opacity: 0.95;
         }
 
+        #saveBtn {
+            display: none;
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 10px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.5);
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        #saveBtn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
         .footer {
             text-align: center;
             font-size: 0.75rem;
@@ -137,6 +152,8 @@
 
     <div class="poem" id="poem"></div>
 
+    <button id="saveBtn" onclick="saveBestPoem()">Save as Best 🌙</button>
+
     <div class="footer">some creations feel back 🌙</div>
 </div>
 
@@ -155,6 +172,27 @@ async function sendText() {
 
     const data = await response.json();
     document.getElementById("poem").innerText = data.poem;
+    document.getElementById("saveBtn").style.display = "block";
+}
+
+async function saveBestPoem() {
+    const poemText = document.getElementById("poem").innerText;
+
+    const response = await fetch("/save_best", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ poem: poemText })
+    });
+
+    const data = await response.json();
+
+    if (data.status === "saved") {
+        alert("Saved as best 🌙");
+    } else {
+        alert("Could not save poem.");
+    }
 }
 </script>
 
