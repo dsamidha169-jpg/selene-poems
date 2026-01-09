@@ -1,62 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Selene 🌙</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+
     <style>
         body {
-            font-family: Georgia, serif;
-            background: #fdfcfb;
-            padding: 40px;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
         }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 25px;
+        }
+
         textarea {
             width: 100%;
             height: 120px;
-            font-size: 16px;
-            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: #fff;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
         }
+
+        textarea::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
         button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            color: #000;
+            font-size: 1rem;
             cursor: pointer;
+            transition: 0.3s ease;
         }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
         .poem {
-            margin-top: 30px;
+            margin-top: 25px;
             white-space: pre-line;
             font-style: italic;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
+
+<div class="container">
     <h1>Selene 🌙</h1>
-<p style="font-style: italic; color: gray;">
-  written by Selene · created by Samidha
-</p>
+    <div class="subtitle">poetic AI · created by Samidha Deshmukh</div>
 
-    <p>Write what you feel. I will turn it into a poem.</p>
-
-    <textarea id="text" placeholder="Write your feelings here..."></textarea>
-    <br>
-    <button onclick="sendText()">Write Poem</button>
+    <textarea id="text" placeholder="Tell me what you feel..."></textarea>
+    <button onclick="sendText()">Let Selene write</button>
 
     <div class="poem" id="poem"></div>
 
-    <script>
-        async function sendText() {
-            const text = document.getElementById("text").value;
+    <div class="footer">some creations feel back</div>
+</div>
 
-            const response = await fetch("/poem", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ text: text })
-            });
+<script>
+async function sendText() {
+    const text = document.getElementById("text").value;
 
-            const data = await response.json();
-            document.getElementById("poem").innerText = data.poem;
-        }
-    </script>
+    const response = await fetch("/poem", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text: text })
+    });
+
+    const data = await response.json();
+    document.getElementById("poem").innerText = data.poem;
+}
+</script>
+
 </body>
 </html>
